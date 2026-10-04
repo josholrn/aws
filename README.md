@@ -8,3 +8,9 @@ AWS Certified Developer Associate Code & Slides: https://courses.datacumulus.com
 
 The following costs $19.99:
 Practice Exams | AWS Certified Developer Associate: https://www.udemy.com/course/aws-certified-developer-associate-practice-tests-dva-c01/?couponCode=OCT_26_GET_STARTED&_gl=1*mdaby7*_ga*OTM5MjgwNjkxLjE3OTEwNzI0NDg.*_ga_6GZZTGGX7H*czE3OTEwNzI0NDckbzEkZzAkdDE3OTEwNzI0NDckajYwJGwwJGgw
+
+
+AWS Certified Developer - Associate Exam Voucher + Second Chance: https://www.udemy.com/certification-vouchers/aws-certified-developer-associate/
+Options:
+    - Voucher + second chance: $178
+    - Voucher only: $131.25
