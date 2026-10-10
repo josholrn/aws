@@ -9,7 +9,7 @@
 * They are `bound to a specific availability zone`
 * Analogy: Think of them as a “network USB stick”
 
-![ebsexample1](06_01_ebsexample1.png)
+![ebsexample1](./img/06_01_ebsexample1.png)
 
 ## EBS Volume
 * It’s a network drive (i.e. not a physical drive)
@@ -37,7 +37,7 @@
 * `Not necessary to detach` volume to do snapshot, but `recommended`
 * Can copy snapshots `across AZ or Region`
 
-![ebsexample2](06_02_ebsexample2.png)
+![ebsexample2](./img/06_02_ebsexample2.png)
 
 ## EBS Snapshots Features
 * EBS Snapshot Archive
@@ -145,7 +145,7 @@ https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-volume-types.html#solid-
 * Up to `16 EC2` Instances at a time
 * Must use a file system that’s cluster-aware (not XFS, EXT4, etc…)
 
-![multi attach](06_03_ebsexample3.png)
+![multi attach](./img/06_03_ebsexample3.png)
 
 
 ---
@@ -158,7 +158,7 @@ https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-volume-types.html#solid-
 * EFS works with EC2 instances in multi-AZ
 * Highly available, scalable, expensive (3x gp2), pay per use
 
-![EFS](06_04_efs.png)
+![EFS](./img/06_04_efs.png)
 
 * Use cases: content management, web serving, data sharing, Wordpress
 * Uses NFSv4.1 protocol
@@ -213,5 +213,5 @@ https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-volume-types.html#solid-
 * Can leverage Storage Tiers for cost savings
 * Remember: EFS vs EBS vs Instance Store
 
-![efs and ebs](06_05_efs_and_efs.png)
+![efs and ebs](./img/06_05_efs_and_efs.png)
 

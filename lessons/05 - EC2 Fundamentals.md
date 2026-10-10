@@ -40,7 +40,7 @@
   * HPC Optimized.
 * AWS has the following naming convention:
   
-![alt text](05_01_image.png)
+![alt text](./img/05_01_image.png)
 
 where:
   * m: instance class
