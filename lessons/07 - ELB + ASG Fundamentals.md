@@ -192,3 +192,124 @@
   * No charges for inter AZ data if enabled
 
 ![alt text](./img/07_06_cross_lb.png)
+
+
+## SSL/TLS - Basics
+* An SSL Certificate allows traffic between your clients and your load balancer to be encrypted in transit (in-flight encryption)
+* `SSL` refers to Secure Sockets Layer, used to encrypt connections
+* `TLS` refers to Transport Layer Security, which is a newer version
+* Nowadays, `TLS certificates are mainly used`, but people still refer as SSL
+* Public SSL certificates are issued by Certificate Authorities (CA)
+* Comodo, Symantec, GoDaddy, GlobalSign, Digicert, Letsencrypt, etc…
+* SSL certificates have an expiration date (you set) and must be renewed
+
+* The load balancer uses an X.509 certificate (SSL/TLS server certificate)
+* You can manage certificates using ACM (AWS Certificate Manager)
+* You can create upload your own certificates alternatively
+* `HTTPS listener`:
+  * You must specify a default certificate
+  * You can add an optional list of certs to support multiple domains
+  * Clients can use SNI (Server Name Indication) to specify the hostname they reach
+  * Ability to specify a security policy to support older versions of SSL / TLS (legacy clients)
+
+### SSL – Server Name Indication (SNI)
+* SNI solves the problem of loading multiple SSL certificates onto one web server (to serve multiple websites)
+* It’s a “newer” protocol, and requires the client to indicate the hostname of the target server in the initial SSL handshake
+* The server will then find the correct certificate, or return the default one
+
+Note:
+* Only works for ALB & NLB (newer generation), CloudFront
+* Does not work for CLB (older gen)
+
+![alt text](./img/07_07_ssl_sni.png)
+
+### Elastic Load Balancers – SSL Certificates
+* `Classic Load Balancer (v1)`
+  * Support only one SSL certificate
+  * Must use multiple CLB for multiple hostname with multiple SSL certificates
+* `Application Load Balancer (v2)`
+  * Supports multiple listeners with multiple SSL certificates
+  * Uses Server Name Indication (SNI) to make it work
+* `Network Load Balancer (v2)`
+  * Supports multiple listeners with multiple SSL certificates
+  * Uses Server Name Indication (SNI) to make it work
+
+
+## Connection Draining
+* Feature naming
+  * Connection Draining – for CLB
+  * Deregistration Delay – for ALB & NLB
+* `Time to complete “in-flight requests”` while the instance is de-registering or unhealthy
+* Stops sending new requests to the EC2 instance which is de-registering
+* Between 1 to 3600 seconds (default: 300 sseconds)
+* Can be disabled (set value to 0)
+* Set to a low value if your requests are short
+
+
+## What’s an Auto Scaling Group?
+* In real-life, the load on your websites and application can change
+* In the cloud, you can create and get rid of servers very quickly
+* The goal of an Auto Scaling Group (ASG) is to:
+  * `Scale out (add EC2 instances`) to match an increased load
+  * `Scale in (remove EC2 instances)` to match a decreased load
+  * Ensure we `have a minimum and a maximum` number of EC2 instances running
+  * Automatically register new instances to a load balancer
+  * Re-create an EC2 instance in case a previous one is terminated (ex: if unhealthy)
+* <u>ASG are free</u> (you only pay for the underlying EC2 instances)
+
+### Auto Scaling Group Attributes
+* A Launch Template (older “Launch Configurations” are deprecated)
+  * AMI + Instance Type
+  * EC2 User Data
+  * EBS Volumes
+  * Security Groups
+  * SSH Key Pair
+  * IAM Roles for your EC2 Instances
+  * Network + Subnets Information
+  * Load Balancer Information
+* Min Size / Max Size / Initial Capacity
+* Scaling Policies
+
+### Auto Scaling - CloudWatch Alarms & Scaling
+* It is possible to scale an ASG based on CloudWatch alarms
+* An alarm monitors a metric (such as Average CPU, or a custom metric)
+* Metrics such as Average CPU are computed for the overall ASG instances
+* Based on the alarm:
+  * We can create scale-out policies (increase the number of instances)
+  * We can create scale-in policies (decrease the number of instances)
+
+### Auto Scaling Groups – Scaling Policies
+* `Dynamic Scaling`
+  * `Target Tracking Scaling`
+    * Simple to set-up
+    * Example: I want the average ASG CPU to stay at around 40%
+      * You can use something in the EC2 like:
+        ```
+        $ yum install stress -y
+        $ stress -c 4
+        ```
+  * `Simple / Step Scaling`
+    * When a CloudWatch alarm is triggered (example CPU > 70%), then add 2 units
+    * When a CloudWatch alarm is triggered (example CPU < 30%), then remove 1
+* `Scheduled Scaling`
+  * Anticipate a scaling based on known usage patterns
+  * Example: increase the min capacity to 10 at 5 pm on Fridays
+* `Predictive scaling` 
+  * continuously forecast load and schedule scaling ahead
+
+#### Good metrics to scale on
+* `CPU Utilization`: Average CPU utilization across your instances
+* `RequestCountPerTarget`: to make sure the number of requests per EC2 instances is stable
+* `Average Network In / Out` (if you’re application is network bound)
+* `Any custom metric` (that you push using CloudWatch)
+
+### Auto Scaling Groups - Scaling Cooldowns
+* After a scaling activity happens, you are in the cooldown period (default 300 seconds)
+* During the cooldown period, the ASG will not launch or terminate additional instances (to allow for metrics to stabilize)
+* Advice: Use a ready-to-use AMI to reduce configuration time in order to be serving request fasters and reduce the cooldown period
+
+### Auto Scaling – Instance Refresh
+* Goal: update/replace launch template and then re-creating all EC2 instances
+* For this we can use the native feature of Instance Refresh
+* Setting of minimum healthy percentage
+* Specify warm-up time (how long until the instance is ready to use)
