@@ -246,6 +246,12 @@ Note:
 * Set to a low value if your requests are short
 
 
+
+---
+
+
+# Auto Scaling Group
+
 ## What’s an Auto Scaling Group?
 * In real-life, the load on your websites and application can change
 * In the cloud, you can create and get rid of servers very quickly
