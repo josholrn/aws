@@ -6,22 +6,38 @@
 - Multipart upload, Transfer Acceleration, and byte-range GETs address different transfer needs.
 - Metadata and tags describe/classify objects but are not a general searchable index.
 
+![alt text](./img/13_01_moving_between_s3_classes.png)
+
 ## Lifecycle rules and storage analysis
-- S3 Lifecycle configurations automate transitions between eligible storage classes and object expiration.
+- `S3 Lifecycle configurations` 
+  - Automate transitions between eligible storage classes and object expiration.
   - Rules can apply to an entire bucket or be scoped by prefix and/or object tags.
   - In versioned buckets, rules can separately transition or expire noncurrent versions and remove expired delete markers.
-- Transitions are useful when access becomes less frequent over time; expiration is useful for data with a defined retention period.
+  - Consider minimum storage-duration charges, minimum billable object sizes, retrieval charges, and operational recovery time before moving data.
+  - Rules can be created for:
+    - `a certain prefix` (example: s3://mybucket/mp3/*)
+    - `certain objects Tags` (example: Department: Finance)
+  - Versioning can provide a recovery window for deleted data: a delete marker hides the current key while prior versions remain.
+    - A lifecycle rule can transition noncurrent versions to lower-cost storage and expire them after the retention period.
+    - This is different from an immediate permanent delete of a specific version.
+- `Transitions Actions` 
+  - `configure objects to transition to another storage class`
+  - they are useful when access `becomes less frequent` over time; expiration is useful for data with a defined retention period.
   - Lifecycle policies can also abort incomplete multipart uploads, reclaiming storage from uploads that never completed.
 - A transition does not make an archive immediately readable in the same way as Standard.
-  - Glacier Flexible Retrieval and Deep Archive objects need a restore request and may take hours; Intelligent-Tiering archive tiers may likewise require restore.
-  - Consider minimum storage-duration charges, minimum billable object sizes, retrieval charges, and operational recovery time before moving data.
-- Example: retain source photos in a fast-access class while users need immediate access, then transition older photos to an archive tier if a restore delay is acceptable.
-  - Disposable thumbnails can instead expire after their useful lifetime or use a class appropriate for replaceable data.
-- Versioning can provide a recovery window for deleted data: a delete marker hides the current key while prior versions remain.
-  - A lifecycle rule can transition noncurrent versions to lower-cost storage and expire them after the retention period.
-  - This is different from an immediate permanent delete of a specific version.
-- S3 Storage Class Analysis helps determine whether Standard data may suit Standard-IA.
-  - It aggregates usage rather than giving instant per-request decisions; reports have a startup/refresh delay and it does not analyze all storage classes.
+- `Expiration actions`
+  - `configure objects to expire (delete) after some time`
+  - Access log files can be set to delete after a 365 days
+  - Can be used to delete old versions of files (if versioning is enabled)
+  - Can be used to delete incomplete Multi-Part uploads
+  
+- `S3 Storage Class Analysis` 
+  - helps determine whether `Standard` data may suit `Standard-IA`.
+    - Does NOT work for `One-Zone IA` or `Glacier`
+  - It aggregates usage rather than giving instant per-request decisions; `reports` = daily and have a startup/refresh delay and it does not analyze all storage classes.
+  
+
+https://www.udemy.com/course/aws-certified-developer-associate-dva-c01/learn/lecture/23743678#overview
 
 ## Events and integration
 - S3 Event Notifications can report events such as object creation, deletion, restoration, and replication.
