@@ -93,44 +93,94 @@
   - If browser code loaded from one origin needs to call an S3 bucket at another origin, configure the bucket's CORS rules to allow the requesting origin, HTTP methods, and any needed request/response headers.
     - The browser may send a preflight `OPTIONS` request before the actual request.
   
-  ![alt text](./img/14_07_cors.png)
+  ![alt text](./img/14_08_cors.png)
 
 - If a client makes a cross-origin request on our S3 bucket, we need to enable the correct CORS headers
 - CORS controls whether browsers may make/read cross-origin requests; it does **not** grant S3 authorization.
   - IAM, bucket/access-point policies, and object permissions must still allow the operation.
   - Conversely, an authorized request from a non-browser client is not blocked by browser CORS rules.
 
-## MFA Delete and access logging
-- MFA Delete adds an MFA requirement for permanent deletion of an object version and for suspending bucket versioning.
+https://www.udemy.com/course/aws-certified-developer-associate-dva-c01/learn/lecture/19729172#overview
+
+## Multi Factor Authentication (MFA) Delete
+- `MFA` = force users to `generate a code` on a device (usually a mobile phone or hardware) before doing important operations on S3
+- MFA required:
+  - yes:
+    - Permanently delete an object version
+    - Suspend Versioning on the bucket
+  - no:
+    - Enable Versioning
+    - List deleted versions
+- `MFA Delete` 
+  - adds an MFA `requirement for permanent deletion` of an object version and 
+  - `for suspending bucket versioning`.
+- To use it:
   - Versioning must be enabled.
   - Enabling versioning and listing versions do not require MFA Delete.
   - Configuration is restricted to the root account owner through the supported process, so it is not a general per-user policy setting.
-- S3 server access logging records requests made to a source bucket, including requests from different accounts and denied requests.
-  - Deliver logs to a separate target bucket in the same Region and grant the required delivery permissions.
-  - Delivery is best effort and may take time; do not rely on it as a real-time audit stream.
-- Never set the logging destination to the bucket being logged.
-  - The resulting log writes can themselves be logged, creating a recursive growth loop.
+    - Only the bucket owner (root account) can enable/disable MFA Delete
+
+##  S3 Access logs
+- S3 server access logging `records requests` made to a `source bucket`, including `requests from any account and authorized or denied requests`.
+- Good `for audit` purpose
+- That `data can be analyzed` using data `analysis tools`
+- Deliver logs to a `separate target bucket` in the `same Region` and grant the required delivery permissions.
+- Delivery is best effort and may take time; do not rely on it as a real-time audit stream.
+- The log format is at: https://docs.aws.amazon.com/AmazonS3/latest/dev/LogFormat.html
+- **`Never set the logging destination to the bucket being logged`**.
+  - The resulting log writes can themselves be logged, creating a `recursive growth loop`.
   - Protect the logging bucket and consider lifecycle retention and analysis tooling.
+
+  ![alt text](./img/14_09_s3_logs.png)
+
 
 ## Presigned URLs
 - A presigned URL allows temporary access to a specific S3 operation and object without making the bucket public or distributing the signer's credentials.
-  - It is signed by the AWS CLI, SDK, or console using the signer's credentials.
-- The recipient's effective access is bounded by the signer's permissions and the URL's expiration, as well as bucket policy, explicit denies, and other applicable controls.
-  - A URL can authorize an operation such as GET or PUT; it does not grant general bucket access.
+  - It is signed by the` AWS CLI, SDK, or console` using the signer's credentials.
+- URL Expiration:
+  - S3 Console – 1 min up to 720 mins (12 hours)
+  - AWS CLI – configure expiration with --expires-in parameter in seconds (default 3600 secs, max. 604800 secs ~ 168 hours)
+- `Users given a pre-signed URL` <u>**inherit**</u> the permissions of the` user that generated the URL for GET / PUT`
+  - The recipient's effective access is bounded by the signer's permissions and the URL's expiration, as well as bucket policy, explicit denies, and other applicable controls.
+  - A URL can authorize an operation such as GET or PUT; 
+  - it does not grant general bucket access.
 - Anyone who obtains the URL can use it while it remains valid, so treat it like a bearer secret.
   - Keep expiration short, avoid logging or publishing it, and use HTTPS.
   - Temporary signing credentials may cause the URL to expire sooner than its configured maximum.
   - Exact console/CLI maximum durations depend on current tooling and credential type.
 - Typical uses include giving an authenticated user a private download link or allowing a client to upload to one designated object key without exposing AWS credentials.
 
-## Access points and Object Lambda
-- S3 Access Points provide distinct DNS endpoints and policies for different applications or teams using the same bucket.
+
+## Access points
+- `S3 Access Points` provide `distinct DNS endpoints` and `policies` for `different applications or teams` using `the same bucket`.
   - For example, finance and sales access points can each grant access to a different prefix, simplifying policy administration compared with one large bucket policy.
-- An access-point policy is an additional access-control layer, not a bypass around the underlying bucket policy or IAM permissions.
+- An access-point policy `is an additional access-control layer`, not a bypass around the underlying bucket policy or IAM permissions.
   - A request must pass the applicable authorization checks.
-- A VPC-origin access point restricts access to a VPC path.
-  - The VPC needs an S3 VPC endpoint (gateway or interface, as applicable), and its endpoint policy must allow the intended access point and bucket.
-  - Access-point, bucket, endpoint, and identity policies must agree.
-- S3 Object Lambda uses a Lambda function with an Object Lambda Access Point to transform an object as it is retrieved.
-  - It can redact sensitive fields, filter records, or convert data formats without maintaining a separate transformed copy.
+- Access Points simplify security management for S3 Buckets
+- Each Access Point has:
+  - its `own DNS name` (Internet Origin or VPC Origin)
+  - an `access point policy` (similar to bucket policy) – manage security at scale
+
+  ![alt text](./img/14_10_s3_access_point.png)
+
+### VPC Origin
+- A `VPC-origin` access point restricts access to a VPC path.
+- We can define the access point to be accessible `only from within the VPC`
+- You must create a `VPC Endpoint to access the Access Point` (Gateway or Interface Endpoint)
+- The VPC Endpoint Policy must allow access to the target bucket and Access Point
+- Access-point, bucket, endpoint, and identity policies must agree.
+
+  ![alt text](./img/14_11_s3_vpc_origin.png)
+  
+
+## S3 Object Lambda
+- S3 Object Lambda 
+  - `uses a Lambda function` with an `Object Lambda Access Point` **to transform** an object `before it is retrieved`.
+  - Only one S3 bucket is needed, on top of which we create S3 Access Point and S3 Object Lambda Access Points.
   - The backing access point and Lambda permissions must be configured, and transformation adds processing latency and cost.
+- Use cases:
+  - It can redact sensitive fields, filter records, or convert data formats without maintaining a separate transformed copy.
+  - Converting across data formats, such as converting XML to JSON.
+  - Resizing and watermarking images on the fly using caller-specific details, such as the user who requested the object.
+  
+  ![alt text](./img/14_12_s3_object_lambda.png)
